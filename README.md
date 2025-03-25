@@ -23,4 +23,12 @@ Bu şekilde, belirtilen dosyaların tam konumlarını gösterebilirsiniz.
 - `toilet` (ya da `figlet`)
 - `fzf` (Fuzzy Finder)
 - Herhangi bir metin düzenleyicisi (örneğin `nano`, `vim` veya `gedit`)
+
   
+### İndirme
+```bash
+git clone https://github.com/alpinanccalik/hemenac.git
+cd hemenac/
+sudo chmod +x ./install.sh
+./install.sh
+```
