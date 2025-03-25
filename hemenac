@@ -1,0 +1,77 @@
+#!/bin/bash
+
+CONFIG_FILE="$HOME/.config/hemenac/hemen.ac"
+
+if [ ! -f "$CONFIG_FILE" ]; then
+  echo "Configuration file $CONFIG_FILE not found."
+  exit 1
+fi
+
+declare -A CONFIG_PATHS
+while IFS='=' read -r key value; do
+  if [[ "$key" =~ ^[0-9]+$ ]]; then
+    CONFIG_PATHS["$key"]="$value"
+  fi
+done < "$CONFIG_FILE"
+
+select_editor() {
+  editor=$(echo -e "Tercih Ettiğiniz Editörü Seçin" | fzf --height 40% --reverse)
+  if [ "$editor" == "Tercih Ettiğiniz Editörü Seçin" ]; then
+    echo "Lütfen editörün exec adını yazın (örnek olarak: kate, vim, vs.):"
+    read -r EDITOR_CMD
+  else
+    echo "Geçersiz seçim, çıkılıyor."
+    exit 1
+  fi
+}
+
+TOILET_CMD=$(command -v toilet || command -v figlet)
+
+print_header() {
+  clear
+  if [ -n "$TOILET_CMD" ]; then
+    $TOILET_CMD -f future "hemenac" --metal
+  fi
+}
+
+select_file() {
+  echo "Düzenlemek İstediğiniz Dosyayı Seçin:"
+  options=$(for key in $(echo "${!CONFIG_PATHS[@]}" | tr ' ' '\n' | sort -n); do
+    echo "Düzenle: $key"
+  done)
+  options=$(echo -e "$options\nÇık")
+  selection=$(echo "$options" | fzf --height 40% --reverse)
+}
+
+open_file() {
+  local selection="$1"
+  if [ "$selection" == "Çık" ]; then
+    echo "Çıkılıyor."
+    exit 0
+  fi
+
+  selected_number=$(echo "$selection" | sed 's/Düzenle: //')
+
+  if [ -n "${CONFIG_PATHS[$selected_number]}" ]; then
+    sudo "$EDITOR_CMD" "${CONFIG_PATHS[$selected_number]}"
+  else
+    echo "Geçersiz seçim, çıkılıyor."
+    exit 1
+  fi
+}
+
+main() {
+  select_editor
+  print_header
+  while true; do
+    select_file
+    if [ -n "$selection" ]; then
+      open_file "$selection"
+      break
+    else
+      echo "Geçersiz seçim, çıkılıyor."
+    fi
+  done
+}
+
+main
